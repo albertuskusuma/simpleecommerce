@@ -16,4 +16,5 @@ Route::get('/', function () {
 });
 
 // for rest api
-Route::get('/api/getproduct','ApiController@getProduct');
+Route::post('/api/getproduct','ApiController@getProduct');
+Route::post('/api/insert_tx_cart','ApiController@insert_tx_cart');

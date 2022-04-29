@@ -10,8 +10,8 @@ class ApiController extends Controller
     //
     public function getProduct(Request $request)
     {
-        // $search = $request->name;
-        $search = "";
+        $search = $request->name;
+        // $search = "";
         $path = "storage/product/";
         $product = DB::select("SELECT product_id, name, photo, price, is_delete
         FROM product WHERE is_delete = 0 
@@ -40,6 +40,7 @@ class ApiController extends Controller
                 'product'=>$data
             ));
         }
+
         else
         {
             echo json_encode(array(
@@ -47,6 +48,46 @@ class ApiController extends Controller
                 'code' => 1,
                 'product'=>[]
             ));
+        }
+    }
+
+    public function insert_tx_cart(Request $request)
+    {
+        $product_id = $request->product_id;
+        $qty = $request->qty;
+        $total_price = (int) $request->price * $qty;
+        $user_id = $request->user_id;
+
+        // echo $total_price;
+        
+        // $sql = "INSERT INTO tx_cart(product_id, qty, total_price, user_id)
+        // VALUES ($product_id, $qty, $total_price, $user_id)";
+
+        // echo $sql;
+
+        $insert_tx_cart = DB::insert('INSERT INTO tx_cart (product_id, qty, total_price, user_id)
+        VALUES(?,?,?,?)',[$product_id,$qty,$total_price,$user_id]);
+
+        if($insert_tx_cart)
+        {
+            echo json_encode(
+                array(
+                    'status'=>200,
+                    'code'=>0,
+                    'msg'=>'Success Add To Cart'
+                )
+            );
+        }
+
+        else
+        {
+            echo json_encode(
+                array(
+                    'status'=>200,
+                    'code'=>1,
+                    'msg' => 'Failed Insert To Cart'
+                )
+            );
         }
     }
 }

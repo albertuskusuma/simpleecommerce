@@ -14,3 +14,6 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+// for rest api
+Route::get('/api/getproduct','ApiController@getProduct');

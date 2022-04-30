@@ -18,3 +18,7 @@ Route::get('/', function () {
 // for rest api
 Route::post('/api/getproduct','ApiController@getProduct');
 Route::post('/api/insert_tx_cart','ApiController@insert_tx_cart');
+Route::post('/api/getCart','ApiController@getCart');
+Route::post('/api/plusItem','ApiController@plus_item');
+Route::post('/api/minusItem','ApiController@minus_item');
+Route::post('/api/checkout','ApiController@checkout');

@@ -12,13 +12,13 @@ class ApiController extends Controller
     {
         $search = $request->name;
         // $search = "";
-        $path = "storage/product/";
+        $path = "uploads/product/";
         $product = DB::select("SELECT product_id, name, photo, price, is_delete
-        FROM product WHERE is_delete = 0 
+        FROM product WHERE is_delete = 0
         AND name like '%$search%'");
 
         $data = [];
-       
+
         // dd($product);
         if(count($product) > 0)
         {
@@ -33,7 +33,7 @@ class ApiController extends Controller
             }
 
             // dd($data);
-    
+
             echo json_encode(array(
                 'status'=>200,
                 'code' => 0,
@@ -58,10 +58,11 @@ class ApiController extends Controller
         $total_price = (int) $request->price * $qty;
         $user_id = (int) $request->user_id;
 
-        $get_data_by_id = DB::select('Select * from tx_cart 
-        WHERE is_delete = ? 
+        $get_data_by_id = DB::select('Select * from tx_cart
+        WHERE is_delete = ?
         AND status_checkout = ?
-        AND user_id = ?',[0,0,$user_id]);
+        AND user_id = ?
+        AND product_id = ?',[0,0,$user_id,$product_id]);
 
         if(count($get_data_by_id) > 0)
         {
@@ -71,9 +72,9 @@ class ApiController extends Controller
             // echo "<br>";
             // echo $total_price;
 
-            $insert_tx_cart = DB::update('UPDATE tx_cart 
-            SET product_id = ?, 
-            qty = ?, 
+            $insert_tx_cart = DB::update('UPDATE tx_cart
+            SET product_id = ?,
+            qty = ?,
             total_price = ?
             WHERE user_id = ? AND product_id = ?',[$product_id,$qty,$total_price,$user_id,$product_id]);
 
@@ -104,7 +105,7 @@ class ApiController extends Controller
         {
             $insert_tx_cart = DB::insert('INSERT INTO tx_cart (product_id, qty, total_price, user_id)
             VALUES(?,?,?,?)',[$product_id,$qty,$total_price,$user_id]);
-    
+
             if($insert_tx_cart)
             {
                 echo json_encode(
@@ -115,7 +116,7 @@ class ApiController extends Controller
                     )
                 );
             }
-    
+
             else
             {
                 echo json_encode(
@@ -136,25 +137,30 @@ class ApiController extends Controller
         $total_price = 0;
         $user_id = $request->user_id;
 
-        $get_data_by_id = DB::select('Select * from tx_cart 
-        WHERE is_delete = ? 
+        $get_data_by_id = DB::select('Select * from tx_cart
+        WHERE is_delete = ?
         AND status_checkout = ?
         AND user_id = ?',[0,0,$user_id]);
 
         if(count($get_data_by_id) > 0){
-            // 
+            //
             $qty = (int) $get_data_by_id[0]->qty + 1;
-            $total_price = (int) $qty * $request->price;
+            $get_product_by_id = DB::select('Select * from product
+            WHERE is_delete = ?
+            AND product_id = ?',[0, $get_data_by_id[0]->product_id]);
+
+
+            $total_price = (int) $qty * (int) $get_product_by_id[0]->price;
             // echo $qty;
             // echo "<br>";
             // echo $total_price;
 
-            $insert_tx_cart = DB::update('UPDATE tx_cart 
-            SET product_id = ?, 
-            qty = ?, 
+            $insert_tx_cart = DB::update('UPDATE tx_cart
+            SET product_id = ?,
+            qty = ?,
             total_price = ?
             WHERE user_id = ? AND product_id = ?',[$product_id,$qty,$total_price,$user_id,$product_id]);
-            
+
             if($insert_tx_cart)
             {
                 echo json_encode(
@@ -186,28 +192,32 @@ class ApiController extends Controller
         $total_price = 0;
         $user_id = $request->user_id;
 
-        $get_data_by_id = DB::select('Select * from tx_cart 
-        WHERE is_delete = ? 
+        $get_data_by_id = DB::select('Select * from tx_cart
+        WHERE is_delete = ?
         AND status_checkout = ?
         AND user_id = ?',[0,0,$user_id]);
 
         if(count($get_data_by_id) > 0){
-            // 
+            //
 
-            if((int) $get_data_by_id[0]->qty > 1)
+            if((int) $get_data_by_id[0]->qty > 0)
             {
                 $qty = (int) $get_data_by_id[0]->qty - 1;
-                $total_price = (int) $qty * $request->price;
+                $get_product_by_id = DB::select('Select * from product
+                WHERE is_delete = ?
+                AND product_id = ?',[0, $get_data_by_id[0]->product_id]);
+
+                $total_price = (int) $qty * (int) $get_product_by_id[0]->price;
                 // echo $qty;
                 // echo "<br>";
                 // echo $total_price;
-    
-                $insert_tx_cart = DB::update('UPDATE tx_cart 
-                SET product_id = ?, 
-                qty = ?, 
+
+                $insert_tx_cart = DB::update('UPDATE tx_cart
+                SET product_id = ?,
+                qty = ?,
                 total_price = ?
                 WHERE user_id = ? AND product_id = ?',[$product_id,$qty,$total_price,$user_id,$product_id]);
-                
+
                 if($insert_tx_cart)
                 {
                     echo json_encode(
@@ -218,7 +228,7 @@ class ApiController extends Controller
                         )
                     );
                 }
-    
+
                 else
                 {
                     echo json_encode(
@@ -229,8 +239,8 @@ class ApiController extends Controller
                         )
                     );
                 }
-            }  
-            
+            }
+
             else
             {
                 echo json_encode(
@@ -248,12 +258,14 @@ class ApiController extends Controller
     {
         // $user_id = $request->user_id;
         $user_id = 1;
+        $path = "uploads/product/";
         $stringData = DB::select("SELECT c.cart_id, c.product_id, p.name, p.photo, c.qty, c.total_price
         FROM `tx_cart` as c
         LEFT JOIN product as p ON c.product_id = p.product_id
-        WHERE c.is_delete = 0 
+        WHERE c.is_delete = 0
         AND c.user_id = ?
-        AND status_checkout = ?",[$user_id,0]);
+        AND c.status_checkout = ?
+        AND c.qty > ?",[$user_id,0,0]);
 
         if(count($stringData) > 0)
         {
@@ -263,7 +275,7 @@ class ApiController extends Controller
                     'product_id' => $v->product_id,
                     'cart_id' => $v->cart_id,
                     'name' => $v->name,
-                    'photo' => $v->photo,
+                    'photo' => $path.$v->photo,
                     'qty' => $v->qty,
                     'total_price' => $v->total_price
                 );
@@ -290,7 +302,7 @@ class ApiController extends Controller
     {
         $user_id = $request->user_id;
 
-        $checkout = DB::update("Update tx_cart set status_checkout = ? 
+        $checkout = DB::update("Update tx_cart set status_checkout = ?
         WHERE user_id = ? AND status_checkout = 0",[1, $user_id]);
 
         if($checkout){

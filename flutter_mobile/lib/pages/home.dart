@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
   final _searchController = TextEditingController();
   late bool loading = true;
 
-  String urlPhoto = "http://192.168.70.6:999/backend/public/";
+  String urlPhoto = "http://192.168.100.9/backend/public/";
 
   @override
   void initState() {
@@ -206,15 +206,17 @@ class _HomePageState extends State<HomePage> {
 
   // function
   Future<void> addCart(int? product_id, int? qty, int? price, int? user_id) async {
-    // print("product id : ${product_id}");
-    // print("qty : ${qty}");
-    // print("price : ${price}");
 
-    var insert = ProductController.addToCart(product_id, qty, price, user_id);
-    // print(insert);
-    // if(insert == "ok"){
-    //   print("success");
-    // }
+    ProductController.addToCart(product_id, qty, price, user_id).then((String result) {
+      if(result == 0 || result == "0"){
+        setState(() {
+          futureProduct = ProductController.getAllProduct("");
+        });
+      }else{
+        print(result);
+      }
+    });
+
   }
 
 }
